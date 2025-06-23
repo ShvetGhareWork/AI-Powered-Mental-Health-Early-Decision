@@ -50,7 +50,22 @@ const mockAssessmentData = [
 
 export function DashboardOverview() {
   const { user } = useAuth();
-  const [Name, SetName] = useState("");
+
+  const [name, SetName] = useState("");
+  const [role, Setrole] = useState("");
+
+  const getRiskColor = (risk: string) => {
+    switch (risk.toLowerCase()) {
+      case "low":
+        return "bg-green-100 text-green-800";
+      case "moderate":
+        return "bg-yellow-100 text-yellow-800";
+      case "high":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -73,6 +88,7 @@ export function DashboardOverview() {
 
         if (response.ok) {
           SetName(data.name);
+          Setrole(data.role);
           localStorage.setItem("name", data.name);
           console.log(data);
         } else {
@@ -86,26 +102,13 @@ export function DashboardOverview() {
     fetchUser();
   }, []);
 
-  const getRiskColor = (risk: string) => {
-    switch (risk.toLowerCase()) {
-      case "low":
-        return "bg-green-100 text-green-800";
-      case "moderate":
-        return "bg-yellow-100 text-yellow-800";
-      case "high":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {Name}
+            Welcome back, {name}
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
             Here's your mental health overview for today
@@ -270,7 +273,7 @@ export function DashboardOverview() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <div className="flex-1">
                   <p className="text-sm font-medium">
                     Completed daily mood check
@@ -309,14 +312,14 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <div className="flex items-start space-x-2">
-                  <Calendar className="h-4 w-4 text-purple-600 mt-0.5" />
+                  <Calendar className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
                       Schedule a check-in
                     </p>
-                    <p className="text-xs text-purple-700 dark:text-purple-200">
+                    <p className="text-xs text-blue-700 dark:text-blue-200">
                       It's been 3 days since your last assessment
                     </p>
                   </div>

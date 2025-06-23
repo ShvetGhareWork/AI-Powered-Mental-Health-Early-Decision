@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -59,23 +60,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const { notifications } = useNotifications();
   const router = useRouter();
-  const [userDetails, setUserDetails] = useState<{
-    name: string;
-    email: string;
-  }>({
-    name: "",
-    email: "",
-  });
+  const [name, SetName] = useState("");
+  const [role, Setrole] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (typeof window === "undefined") return;
-
       const token = localStorage.getItem("token");
-      if (!token || token === "undefined") {
-        console.warn("No valid token found.");
-        return;
-      }
+      if (!token) return;
 
       try {
         const response = await fetch(
@@ -92,8 +83,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         const data = await response.json();
 
         if (response.ok) {
-          setUserDetails({ name: data.name, email: data.email });
+          SetName(data.name);
+          Setrole(data.role);
           localStorage.setItem("name", data.name);
+          console.log(data);
         } else {
           console.error("Failed to fetch user details:", data.message);
         }
@@ -104,6 +97,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
     fetchUser();
   }, []);
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth/login");
+    }
+  }, [user, router]);
 
   if (!user) {
     return null;
@@ -153,20 +151,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       <Avatar className="h-6 w-6">
                         <AvatarImage src={user.avatar || "/placeholder.svg"} />
                         <AvatarFallback>
-                          {userDetails.name
-                            ? userDetails.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                            : "U"}
+                          {user.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col items-start">
-                        <span className="text-sm font-medium">
-                          {userDetails.name || "User"}
-                        </span>
+                        <span className="text-sm font-medium">{name}</span>
                         <span className="text-xs text-muted-foreground capitalize">
-                          {userDetails.email || "email@example.com"}
+                          {role}
                         </span>
                       </div>
                       <ChevronDown className="ml-auto h-4 w-4" />

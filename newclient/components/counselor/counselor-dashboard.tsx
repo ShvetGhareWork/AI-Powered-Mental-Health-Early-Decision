@@ -1,26 +1,14 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -28,28 +16,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertTriangle,
-  Clock,
-  Search,
-  Download,
-  MessageSquare,
-  Activity,
-  Heart,
-  Plus,
-  Eye,
-  Edit,
-} from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+} from "@/components/ui/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { AlertTriangle, Clock, Search, Download, MessageSquare, Activity, Heart, Plus, Eye, Edit } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 import {
   LineChart,
   Line,
@@ -63,48 +33,48 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
+} from "recharts"
 
 interface FlaggedUser {
-  id: string;
-  anonymousId: string;
-  riskLevel: "Low" | "Moderate" | "High" | "Critical";
-  lastAssessment: string;
-  suicideRisk: number;
-  depressionRisk: number;
-  anxietyRisk: number;
-  assignedCounselor?: string;
-  status: "New" | "In Progress" | "Resolved" | "Escalated";
-  lastActivity: string;
-  contactPreference: "email" | "phone" | "chat" | "none";
-  urgencyScore: number;
-  notes?: string;
-  interventions: number;
+  id: string
+  anonymousId: string
+  riskLevel: "Low" | "Moderate" | "High" | "Critical"
+  lastAssessment: string
+  suicideRisk: number
+  depressionRisk: number
+  anxietyRisk: number
+  assignedCounselor?: string
+  status: "New" | "In Progress" | "Resolved" | "Escalated"
+  lastActivity: string
+  contactPreference: "email" | "phone" | "chat" | "none"
+  urgencyScore: number
+  notes?: string
+  interventions: number
 }
 
 interface CaseTicket {
-  id: string;
-  userId: string;
-  title: string;
-  description: string;
-  priority: "Low" | "Medium" | "High" | "Urgent";
-  status: "Open" | "In Progress" | "Resolved" | "Closed";
-  createdAt: string;
-  updatedAt: string;
-  assignedTo?: string;
-  category: "Assessment" | "Chat" | "Crisis" | "Follow-up";
-  tags: string[];
+  id: string
+  userId: string
+  title: string
+  description: string
+  priority: "Low" | "Medium" | "High" | "Urgent"
+  status: "Open" | "In Progress" | "Resolved" | "Closed"
+  createdAt: string
+  updatedAt: string
+  assignedTo?: string
+  category: "Assessment" | "Chat" | "Crisis" | "Follow-up"
+  tags: string[]
 }
 
 interface Intervention {
-  id: string;
-  userId: string;
-  type: "Call" | "Email" | "Chat" | "In-Person" | "Referral";
-  date: string;
-  duration?: number;
-  outcome: "Successful" | "No Response" | "Escalated" | "Scheduled Follow-up";
-  notes: string;
-  counselor: string;
+  id: string
+  userId: string
+  type: "Call" | "Email" | "Chat" | "In-Person" | "Referral"
+  date: string
+  duration?: number
+  outcome: "Successful" | "No Response" | "Escalated" | "Scheduled Follow-up"
+  notes: string
+  counselor: string
 }
 
 const mockFlaggedUsers: FlaggedUser[] = [
@@ -136,8 +106,7 @@ const mockFlaggedUsers: FlaggedUser[] = [
     contactPreference: "email",
     urgencyScore: 75,
     interventions: 2,
-    notes:
-      "Patient responsive to initial contact. Scheduled follow-up session.",
+    notes: "Patient responsive to initial contact. Scheduled follow-up session.",
   },
   {
     id: "3",
@@ -186,15 +155,14 @@ const mockFlaggedUsers: FlaggedUser[] = [
     interventions: 1,
     notes: "Successfully connected with local resources. Case resolved.",
   },
-];
+]
 
 const mockTickets: CaseTicket[] = [
   {
     id: "1",
     userId: "USER_001",
     title: "High suicide risk detected in chat",
-    description:
-      "AI detected concerning language patterns indicating immediate suicide risk during chat session.",
+    description: "AI detected concerning language patterns indicating immediate suicide risk during chat session.",
     priority: "Urgent",
     status: "Open",
     createdAt: "2024-01-15T10:30:00Z",
@@ -206,8 +174,7 @@ const mockTickets: CaseTicket[] = [
     id: "2",
     userId: "USER_002",
     title: "Consistent depression indicators",
-    description:
-      "Multiple assessments showing increasing depression scores over the past month.",
+    description: "Multiple assessments showing increasing depression scores over the past month.",
     priority: "High",
     status: "In Progress",
     createdAt: "2024-01-14T15:45:00Z",
@@ -220,8 +187,7 @@ const mockTickets: CaseTicket[] = [
     id: "3",
     userId: "USER_003",
     title: "Failed contact attempts",
-    description:
-      "Unable to reach high-risk user after multiple contact attempts via preferred method.",
+    description: "Unable to reach high-risk user after multiple contact attempts via preferred method.",
     priority: "High",
     status: "In Progress",
     createdAt: "2024-01-13T12:00:00Z",
@@ -234,8 +200,7 @@ const mockTickets: CaseTicket[] = [
     id: "4",
     userId: "USER_004",
     title: "Anxiety spike detected",
-    description:
-      "Sudden increase in anxiety levels reported in latest assessment.",
+    description: "Sudden increase in anxiety levels reported in latest assessment.",
     priority: "Medium",
     status: "Open",
     createdAt: "2024-01-12T14:30:00Z",
@@ -243,7 +208,7 @@ const mockTickets: CaseTicket[] = [
     category: "Assessment",
     tags: ["anxiety", "spike", "monitoring"],
   },
-];
+]
 
 const mockInterventions: Intervention[] = [
   {
@@ -253,8 +218,7 @@ const mockInterventions: Intervention[] = [
     date: "2024-01-15T14:00:00Z",
     duration: 45,
     outcome: "Successful",
-    notes:
-      "Patient was responsive and agreed to schedule regular check-ins. Provided coping strategies.",
+    notes: "Patient was responsive and agreed to schedule regular check-ins. Provided coping strategies.",
     counselor: "Dr. Smith",
   },
   {
@@ -263,8 +227,7 @@ const mockInterventions: Intervention[] = [
     type: "Email",
     date: "2024-01-14T10:30:00Z",
     outcome: "No Response",
-    notes:
-      "Sent follow-up email with resources and contact information. No response received.",
+    notes: "Sent follow-up email with resources and contact information. No response received.",
     counselor: "Dr. Johnson",
   },
   {
@@ -274,224 +237,166 @@ const mockInterventions: Intervention[] = [
     date: "2024-01-13T16:20:00Z",
     duration: 30,
     outcome: "Scheduled Follow-up",
-    notes:
-      "Brief chat session. Patient requested follow-up appointment next week.",
+    notes: "Brief chat session. Patient requested follow-up appointment next week.",
     counselor: "Dr. Williams",
   },
-];
+]
 
 const mockTrendData = [
-  {
-    date: "2024-01-01",
-    flaggedUsers: 12,
-    interventions: 8,
-    resolved: 5,
-    newCases: 3,
-  },
-  {
-    date: "2024-01-02",
-    flaggedUsers: 15,
-    interventions: 10,
-    resolved: 7,
-    newCases: 5,
-  },
-  {
-    date: "2024-01-03",
-    flaggedUsers: 18,
-    interventions: 12,
-    resolved: 9,
-    newCases: 4,
-  },
-  {
-    date: "2024-01-04",
-    flaggedUsers: 14,
-    interventions: 9,
-    resolved: 6,
-    newCases: 2,
-  },
-  {
-    date: "2024-01-05",
-    flaggedUsers: 20,
-    interventions: 15,
-    resolved: 11,
-    newCases: 6,
-  },
-  {
-    date: "2024-01-06",
-    flaggedUsers: 16,
-    interventions: 11,
-    resolved: 8,
-    newCases: 3,
-  },
-  {
-    date: "2024-01-07",
-    flaggedUsers: 22,
-    interventions: 18,
-    resolved: 13,
-    newCases: 7,
-  },
-];
+  { date: "2024-01-01", flaggedUsers: 12, interventions: 8, resolved: 5, newCases: 3 },
+  { date: "2024-01-02", flaggedUsers: 15, interventions: 10, resolved: 7, newCases: 5 },
+  { date: "2024-01-03", flaggedUsers: 18, interventions: 12, resolved: 9, newCases: 4 },
+  { date: "2024-01-04", flaggedUsers: 14, interventions: 9, resolved: 6, newCases: 2 },
+  { date: "2024-01-05", flaggedUsers: 20, interventions: 15, resolved: 11, newCases: 6 },
+  { date: "2024-01-06", flaggedUsers: 16, interventions: 11, resolved: 8, newCases: 3 },
+  { date: "2024-01-07", flaggedUsers: 22, interventions: 18, resolved: 13, newCases: 7 },
+]
 
 const riskDistributionData = [
   { name: "Low", value: 35, fill: "#10b981" },
   { name: "Moderate", value: 25, fill: "#f59e0b" },
   { name: "High", value: 30, fill: "#ef4444" },
   { name: "Critical", value: 10, fill: "#dc2626" },
-];
+]
 
 export function CounselorDashboard() {
-  const [selectedUser, setSelectedUser] = useState<FlaggedUser | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<CaseTicket | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterRisk, setFilterRisk] = useState("all");
-  const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [showInterventionDialog, setShowInterventionDialog] = useState(false);
-  const [showTicketDialog, setShowTicketDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<FlaggedUser | null>(null)
+  const [selectedTicket, setSelectedTicket] = useState<CaseTicket | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [filterRisk, setFilterRisk] = useState("all")
+  const [showAssignDialog, setShowAssignDialog] = useState(false)
+  const [showInterventionDialog, setShowInterventionDialog] = useState(false)
+  const [showTicketDialog, setShowTicketDialog] = useState(false)
   const [newIntervention, setNewIntervention] = useState({
     type: "Call",
     notes: "",
     outcome: "Successful",
-  });
-  const { toast } = useToast();
+  })
+  const { toast } = useToast()
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
       case "low":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800"
       case "moderate":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800"
       case "high":
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-100 text-orange-800"
       case "critical":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800"
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800"
     }
-  };
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
       case "low":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800"
       case "medium":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800"
       case "high":
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-100 text-orange-800"
       case "urgent":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800"
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800"
     }
-  };
+  }
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "new":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800"
       case "in progress":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800"
       case "resolved":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800"
       case "escalated":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800"
       case "open":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800"
       case "closed":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800"
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800"
     }
-  };
+  }
 
   const assignCounselor = (userId: string, counselor: string) => {
     toast({
       title: "Counselor Assigned",
       description: `${counselor} has been assigned to ${userId}`,
-    });
-    setShowAssignDialog(false);
-  };
+    })
+    setShowAssignDialog(false)
+  }
 
   const createIntervention = () => {
-    if (!selectedUser) return;
+    if (!selectedUser) return
 
     toast({
       title: "Intervention Recorded",
       description: `${newIntervention.type} intervention recorded for ${selectedUser.anonymousId}`,
-    });
-    setShowInterventionDialog(false);
-    setNewIntervention({ type: "Call", notes: "", outcome: "Successful" });
-  };
+    })
+    setShowInterventionDialog(false)
+    setNewIntervention({ type: "Call", notes: "", outcome: "Successful" })
+  }
 
   const exportData = (type: "users" | "tickets" | "interventions") => {
-    let data: any[] = [];
-    let filename = "";
+    let data: any[] = []
+    let filename = ""
 
     switch (type) {
       case "users":
-        data = mockFlaggedUsers;
-        filename = "flagged-users";
-        break;
+        data = mockFlaggedUsers
+        filename = "flagged-users"
+        break
       case "tickets":
-        data = mockTickets;
-        filename = "case-tickets";
-        break;
+        data = mockTickets
+        filename = "case-tickets"
+        break
       case "interventions":
-        data = mockInterventions;
-        filename = "interventions";
-        break;
+        data = mockInterventions
+        filename = "interventions"
+        break
     }
 
-    const csvContent = [
-      Object.keys(data[0]).join(","),
-      ...data.map((row) => Object.values(row).join(",")),
-    ].join("\n");
+    const csvContent = [Object.keys(data[0]).join(","), ...data.map((row) => Object.values(row).join(","))].join("\n")
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${filename}-${new Date().toISOString().split("T")[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const blob = new Blob([csvContent], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${filename}-${new Date().toISOString().split("T")[0]}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
 
     toast({
       title: "Export Complete",
       description: `${type} data has been exported to CSV.`,
-    });
-  };
+    })
+  }
 
   const filteredUsers = mockFlaggedUsers.filter((user) => {
-    const matchesSearch = user.anonymousId
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" || user.status.toLowerCase() === filterStatus;
-    const matchesRisk =
-      filterRisk === "all" || user.riskLevel.toLowerCase() === filterRisk;
-    return matchesSearch && matchesStatus && matchesRisk;
-  });
+    const matchesSearch = user.anonymousId.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = filterStatus === "all" || user.status.toLowerCase() === filterStatus
+    const matchesRisk = filterRisk === "all" || user.riskLevel.toLowerCase() === filterRisk
+    return matchesSearch && matchesStatus && matchesRisk
+  })
 
-  const criticalUsers = mockFlaggedUsers.filter(
-    (user) => user.riskLevel === "Critical"
-  ).length;
-  const newCases = mockFlaggedUsers.filter(
-    (user) => user.status === "New"
-  ).length;
-  const inProgress = mockFlaggedUsers.filter(
-    (user) => user.status === "In Progress"
-  ).length;
-  const totalInterventions = mockInterventions.length;
+  const criticalUsers = mockFlaggedUsers.filter((user) => user.riskLevel === "Critical").length
+  const newCases = mockFlaggedUsers.filter((user) => user.status === "New").length
+  const inProgress = mockFlaggedUsers.filter((user) => user.status === "In Progress").length
+  const totalInterventions = mockInterventions.length
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Counselor Dashboard
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Counselor Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
             Monitor and manage mental health cases and interventions
           </p>
@@ -512,18 +417,12 @@ export function CounselorDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Critical Cases
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Critical Cases</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {criticalUsers}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Require immediate attention
-            </p>
+            <div className="text-2xl font-bold text-red-600">{criticalUsers}</div>
+            <p className="text-xs text-muted-foreground">Require immediate attention</p>
           </CardContent>
         </Card>
 
@@ -544,12 +443,8 @@ export function CounselorDashboard() {
             <Activity className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {inProgress}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Currently in progress
-            </p>
+            <div className="text-2xl font-bold text-yellow-600">{inProgress}</div>
+            <p className="text-xs text-muted-foreground">Currently in progress</p>
           </CardContent>
         </Card>
 
@@ -559,9 +454,7 @@ export function CounselorDashboard() {
             <Heart className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {totalInterventions}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{totalInterventions}</div>
             <p className="text-xs text-muted-foreground">This week</p>
           </CardContent>
         </Card>
@@ -572,47 +465,18 @@ export function CounselorDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Case Trends</CardTitle>
-            <CardDescription>
-              Daily case volume and intervention activity
-            </CardDescription>
+            <CardDescription>Daily case volume and intervention activity</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={mockTrendData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(value) =>
-                    new Date(value).toLocaleDateString()
-                  }
-                />
+                <XAxis dataKey="date" tickFormatter={(value) => new Date(value).toLocaleDateString()} />
                 <YAxis />
-                <Tooltip
-                  labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString()
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="flaggedUsers"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  name="Flagged Users"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="interventions"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  name="Interventions"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="resolved"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  name="Resolved"
-                />
+                <Tooltip labelFormatter={(value) => new Date(value).toLocaleDateString()} />
+                <Line type="monotone" dataKey="flaggedUsers" stroke="#ef4444" strokeWidth={2} name="Flagged Users" />
+                <Line type="monotone" dataKey="interventions" stroke="#10b981" strokeWidth={2} name="Interventions" />
+                <Line type="monotone" dataKey="resolved" stroke="#3b82f6" strokeWidth={2} name="Resolved" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -621,9 +485,7 @@ export function CounselorDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Risk Distribution</CardTitle>
-            <CardDescription>
-              Current distribution of risk levels
-            </CardDescription>
+            <CardDescription>Current distribution of risk levels</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -633,9 +495,7 @@ export function CounselorDashboard() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                  }
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -706,9 +566,7 @@ export function CounselorDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Flagged Users</CardTitle>
-              <CardDescription>
-                Users requiring attention based on AI analysis
-              </CardDescription>
+              <CardDescription>Users requiring attention based on AI analysis</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -726,22 +584,14 @@ export function CounselorDashboard() {
                 <TableBody>
                   {filteredUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">
-                        {user.anonymousId}
+                      <TableCell className="font-medium">{user.anonymousId}</TableCell>
+                      <TableCell>
+                        <Badge className={getRiskColor(user.riskLevel)}>{user.riskLevel}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getRiskColor(user.riskLevel)}>
-                          {user.riskLevel}
-                        </Badge>
+                        <Badge className={getStatusColor(user.status)}>{user.status}</Badge>
                       </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(user.status)}>
-                          {user.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {user.assignedCounselor || "Unassigned"}
-                      </TableCell>
+                      <TableCell>{user.assignedCounselor || "Unassigned"}</TableCell>
                       <TableCell>{user.lastActivity}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
@@ -751,10 +601,10 @@ export function CounselorDashboard() {
                                 user.urgencyScore >= 80
                                   ? "bg-red-500"
                                   : user.urgencyScore >= 60
-                                  ? "bg-orange-500"
-                                  : user.urgencyScore >= 40
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
+                                    ? "bg-orange-500"
+                                    : user.urgencyScore >= 40
+                                      ? "bg-yellow-500"
+                                      : "bg-green-500"
                               }`}
                               style={{ width: `${user.urgencyScore}%` }}
                             ></div>
@@ -764,19 +614,15 @@ export function CounselorDashboard() {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedUser(user)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => setSelectedUser(user)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setSelectedUser(user);
-                              setShowAssignDialog(true);
+                              setSelectedUser(user)
+                              setShowAssignDialog(true)
                             }}
                           >
                             <Edit className="h-4 w-4" />
@@ -784,8 +630,8 @@ export function CounselorDashboard() {
                           <Button
                             size="sm"
                             onClick={() => {
-                              setSelectedUser(user);
-                              setShowInterventionDialog(true);
+                              setSelectedUser(user)
+                              setShowInterventionDialog(true)
                             }}
                           >
                             <MessageSquare className="h-4 w-4" />
@@ -804,9 +650,7 @@ export function CounselorDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Case Tickets</CardTitle>
-              <CardDescription>
-                Active cases and intervention requests
-              </CardDescription>
+              <CardDescription>Active cases and intervention requests</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -826,34 +670,20 @@ export function CounselorDashboard() {
                 <TableBody>
                   {mockTickets.map((ticket) => (
                     <TableRow key={ticket.id}>
-                      <TableCell className="font-medium">
-                        #{ticket.id}
-                      </TableCell>
+                      <TableCell className="font-medium">#{ticket.id}</TableCell>
                       <TableCell>{ticket.userId}</TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {ticket.title}
+                      <TableCell className="max-w-xs truncate">{ticket.title}</TableCell>
+                      <TableCell>
+                        <Badge className={getPriorityColor(ticket.priority)}>{ticket.priority}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getPriorityColor(ticket.priority)}>
-                          {ticket.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(ticket.status)}>
-                          {ticket.status}
-                        </Badge>
+                        <Badge className={getStatusColor(ticket.status)}>{ticket.status}</Badge>
                       </TableCell>
                       <TableCell>{ticket.category}</TableCell>
                       <TableCell>{ticket.assignedTo || "Unassigned"}</TableCell>
+                      <TableCell>{new Date(ticket.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        {new Date(ticket.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedTicket(ticket)}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => setSelectedTicket(ticket)}>
                           <Eye className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -869,9 +699,7 @@ export function CounselorDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Recent Interventions</CardTitle>
-              <CardDescription>
-                Log of counselor interventions and outcomes
-              </CardDescription>
+              <CardDescription>Log of counselor interventions and outcomes</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -889,29 +717,17 @@ export function CounselorDashboard() {
                 <TableBody>
                   {mockInterventions.map((intervention) => (
                     <TableRow key={intervention.id}>
-                      <TableCell className="font-medium">
-                        {intervention.userId}
-                      </TableCell>
+                      <TableCell className="font-medium">{intervention.userId}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{intervention.type}</Badge>
                       </TableCell>
+                      <TableCell>{new Date(intervention.date).toLocaleDateString()}</TableCell>
+                      <TableCell>{intervention.duration ? `${intervention.duration} min` : "N/A"}</TableCell>
                       <TableCell>
-                        {new Date(intervention.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {intervention.duration
-                          ? `${intervention.duration} min`
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(intervention.outcome)}>
-                          {intervention.outcome}
-                        </Badge>
+                        <Badge className={getStatusColor(intervention.outcome)}>{intervention.outcome}</Badge>
                       </TableCell>
                       <TableCell>{intervention.counselor}</TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {intervention.notes}
-                      </TableCell>
+                      <TableCell className="max-w-xs truncate">{intervention.notes}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -925,9 +741,7 @@ export function CounselorDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Intervention Effectiveness</CardTitle>
-                <CardDescription>
-                  Success rates by intervention type
-                </CardDescription>
+                <CardDescription>Success rates by intervention type</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -943,11 +757,7 @@ export function CounselorDashboard() {
                     <XAxis dataKey="type" />
                     <YAxis />
                     <Tooltip />
-                    <Bar
-                      dataKey="successful"
-                      fill="#10b981"
-                      name="Successful"
-                    />
+                    <Bar dataKey="successful" fill="#10b981" name="Successful" />
                     <Bar dataKey="total" fill="#e5e7eb" name="Total" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -957,9 +767,7 @@ export function CounselorDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Response Times</CardTitle>
-                <CardDescription>
-                  Average response time by priority level
-                </CardDescription>
+                <CardDescription>Average response time by priority level</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -991,9 +799,7 @@ export function CounselorDashboard() {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>User Details: {selectedUser?.anonymousId}</DialogTitle>
-            <DialogDescription>
-              Comprehensive view of user risk assessment and history
-            </DialogDescription>
+            <DialogDescription>Comprehensive view of user risk assessment and history</DialogDescription>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-6">
@@ -1005,21 +811,15 @@ export function CounselorDashboard() {
                   <CardContent className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm">Suicide Risk:</span>
-                      <span className="text-sm font-medium text-red-600">
-                        {selectedUser.suicideRisk}%
-                      </span>
+                      <span className="text-sm font-medium text-red-600">{selectedUser.suicideRisk}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Depression:</span>
-                      <span className="text-sm font-medium text-orange-600">
-                        {selectedUser.depressionRisk}%
-                      </span>
+                      <span className="text-sm font-medium text-orange-600">{selectedUser.depressionRisk}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Anxiety:</span>
-                      <span className="text-sm font-medium text-yellow-600">
-                        {selectedUser.anxietyRisk}%
-                      </span>
+                      <span className="text-sm font-medium text-yellow-600">{selectedUser.anxietyRisk}%</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -1031,30 +831,22 @@ export function CounselorDashboard() {
                   <CardContent className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm">Status:</span>
-                      <Badge className={getStatusColor(selectedUser.status)}>
-                        {selectedUser.status}
-                      </Badge>
+                      <Badge className={getStatusColor(selectedUser.status)}>{selectedUser.status}</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Risk Level:</span>
-                      <Badge className={getRiskColor(selectedUser.riskLevel)}>
-                        {selectedUser.riskLevel}
-                      </Badge>
+                      <Badge className={getRiskColor(selectedUser.riskLevel)}>{selectedUser.riskLevel}</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Interventions:</span>
-                      <span className="text-sm font-medium">
-                        {selectedUser.interventions}
-                      </span>
+                      <span className="text-sm font-medium">{selectedUser.interventions}</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">
-                      Contact Preferences
-                    </CardTitle>
+                    <CardTitle className="text-sm">Contact Preferences</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex justify-between">
@@ -1065,15 +857,11 @@ export function CounselorDashboard() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Last Activity:</span>
-                      <span className="text-sm">
-                        {selectedUser.lastActivity}
-                      </span>
+                      <span className="text-sm">{selectedUser.lastActivity}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Last Assessment:</span>
-                      <span className="text-sm">
-                        {selectedUser.lastAssessment}
-                      </span>
+                      <span className="text-sm">{selectedUser.lastAssessment}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -1085,9 +873,7 @@ export function CounselorDashboard() {
                     <CardTitle className="text-sm">Case Notes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {selectedUser.notes}
-                    </p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{selectedUser.notes}</p>
                   </CardContent>
                 </Card>
               )}
@@ -1096,7 +882,7 @@ export function CounselorDashboard() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setShowAssignDialog(true);
+                    setShowAssignDialog(true)
                   }}
                 >
                   <Edit className="mr-2 h-4 w-4" />
@@ -1104,7 +890,7 @@ export function CounselorDashboard() {
                 </Button>
                 <Button
                   onClick={() => {
-                    setShowInterventionDialog(true);
+                    setShowInterventionDialog(true)
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -1121,9 +907,7 @@ export function CounselorDashboard() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Assign Counselor</DialogTitle>
-            <DialogDescription>
-              Assign a counselor to {selectedUser?.anonymousId}
-            </DialogDescription>
+            <DialogDescription>Assign a counselor to {selectedUser?.anonymousId}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1160,43 +944,27 @@ export function CounselorDashboard() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowAssignDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowAssignDialog(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={() =>
-                assignCounselor(selectedUser?.id || "", "Dr. Smith")
-              }
-            >
-              Assign Counselor
-            </Button>
+            <Button onClick={() => assignCounselor(selectedUser?.id || "", "Dr. Smith")}>Assign Counselor</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Record Intervention Dialog */}
-      <Dialog
-        open={showInterventionDialog}
-        onOpenChange={setShowInterventionDialog}
-      >
+      <Dialog open={showInterventionDialog} onOpenChange={setShowInterventionDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Record Intervention</DialogTitle>
-            <DialogDescription>
-              Log an intervention for {selectedUser?.anonymousId}
-            </DialogDescription>
+            <DialogDescription>Log an intervention for {selectedUser?.anonymousId}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="intervention-type">Intervention Type</Label>
               <Select
                 value={newIntervention.type}
-                onValueChange={(value) =>
-                  setNewIntervention({ ...newIntervention, type: value })
-                }
+                onValueChange={(value) => setNewIntervention({ ...newIntervention, type: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -1214,9 +982,7 @@ export function CounselorDashboard() {
               <Label htmlFor="outcome">Outcome</Label>
               <Select
                 value={newIntervention.outcome}
-                onValueChange={(value) =>
-                  setNewIntervention({ ...newIntervention, outcome: value })
-                }
+                onValueChange={(value) => setNewIntervention({ ...newIntervention, outcome: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -1225,9 +991,7 @@ export function CounselorDashboard() {
                   <SelectItem value="Successful">Successful</SelectItem>
                   <SelectItem value="No Response">No Response</SelectItem>
                   <SelectItem value="Escalated">Escalated</SelectItem>
-                  <SelectItem value="Scheduled Follow-up">
-                    Scheduled Follow-up
-                  </SelectItem>
+                  <SelectItem value="Scheduled Follow-up">Scheduled Follow-up</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1235,21 +999,13 @@ export function CounselorDashboard() {
               <Label htmlFor="notes">Intervention Notes</Label>
               <Textarea
                 value={newIntervention.notes}
-                onChange={(e) =>
-                  setNewIntervention({
-                    ...newIntervention,
-                    notes: e.target.value,
-                  })
-                }
+                onChange={(e) => setNewIntervention({ ...newIntervention, notes: e.target.value })}
                 placeholder="Describe the intervention and any relevant details..."
               />
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowInterventionDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowInterventionDialog(false)}>
               Cancel
             </Button>
             <Button onClick={createIntervention}>Record Intervention</Button>
@@ -1257,5 +1013,5 @@ export function CounselorDashboard() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
