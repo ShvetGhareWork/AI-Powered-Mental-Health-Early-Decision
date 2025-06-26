@@ -30,6 +30,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 const mockMoodData = [
   { date: "2024-01-01", mood: 7, anxiety: 3, stress: 4 },
@@ -52,6 +54,12 @@ export function DashboardOverview() {
   const { user } = useAuth();
   const [count1, setcount1] = useState("");
   const [count2, setcount2] = useState("");
+  const [UserDetails, setUserDetails] = useState({
+    name: "",
+  });
+  const router = useRouter();
+  const { toast } = useToast();
+
   // const Accessmentcount = localStorage.getItem("AsscessmentCount");
   // const count = localStorage.getItem("count");
   // const [Count, SetCount] = useState(localStorage.getItem("count"));
@@ -78,13 +86,55 @@ export function DashboardOverview() {
     setcount2(Accessmentcount || "");
   }, []);
 
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in to access your profile.",
+          variant: "destructive",
+        });
+        router.push("/auth/login");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/user-details`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.error("Failed to fetch user details");
+          router.push("/auth/login");
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched User Details:", data);
+        setUserDetails(data);
+      } catch (err) {
+        console.error("Failed to fetch user details:", err);
+        router.push("/auth/login");
+      }
+    };
+    fetchUserDetails();
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {user?.name}
+            Welcome back, {UserDetails.name}
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
             Here's your mental health overview for today

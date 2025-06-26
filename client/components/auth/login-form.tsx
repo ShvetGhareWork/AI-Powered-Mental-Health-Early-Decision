@@ -46,7 +46,7 @@ export function LoginForm() {
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
-        router.push("/profile"); // or wherever you want
+        router.push("/dashboard"); // or wherever you want
       } else {
         toast({
           title: "Unexpected error",
