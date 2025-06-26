@@ -29,6 +29,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useEffect, useState } from "react";
 
 const mockMoodData = [
   { date: "2024-01-01", mood: 7, anxiety: 3, stress: 4 },
@@ -49,8 +50,10 @@ const mockAssessmentData = [
 
 export function DashboardOverview() {
   const { user } = useAuth();
-  const Accessmentcount = localStorage.getItem("AsscessmentCount");
-  const count = localStorage.getItem("count");
+  const [count1, setcount1] = useState("");
+  const [count2, setcount2] = useState("");
+  // const Accessmentcount = localStorage.getItem("AsscessmentCount");
+  // const count = localStorage.getItem("count");
   // const [Count, SetCount] = useState(localStorage.getItem("count"));
 
   const getRiskColor = (risk: string) => {
@@ -65,6 +68,15 @@ export function DashboardOverview() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  useEffect(() => {
+    const saved = localStorage.getItem("count");
+    const Accessmentcount = localStorage.getItem("AsscessmentCount");
+    saved ? Number(saved) : 0;
+    Accessmentcount ? Number(Accessmentcount) : 0;
+    setcount1(saved || "");
+    setcount2(Accessmentcount || "");
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -99,8 +111,8 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {/* {localStorage.getItem("count")} */}
-              {count}
+              {count1} {/* {count} */}
+              12
             </div>
             <p className="text-xs text-muted-foreground">+2 from last week</p>
           </CardContent>
@@ -124,8 +136,7 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {/* {localStorage.getItem("AsscessmentCount")} */}
-              {Accessmentcount}
+              {count2} {/* {Accessmentcount} */}2
             </div>
             <p className="text-xs text-muted-foreground">
               Completed this month
