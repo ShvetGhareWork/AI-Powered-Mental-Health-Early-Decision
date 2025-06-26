@@ -56,10 +56,7 @@ export function MentalHealthCheck() {
   const [textInput, setTextInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   // const [Count, SetCount] = useState(0);
-  const [Count, setCount] = useState(() => {
-    const saved = localStorage.getItem("count");
-    return saved ? Number(saved) : 0;
-  });
+  const [Count, setCount] = useState(0);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
@@ -319,8 +316,9 @@ RECOMMENDATIONS
 
   // Sync to localStorage on count change
   useEffect(() => {
-    localStorage.setItem("count", Count.toString());
-  }, [Count]);
+    const saved = localStorage.getItem("count");
+    setCount(saved ? Number(saved) : 0);
+  }, []);
 
   return (
     <div className="space-y-6">

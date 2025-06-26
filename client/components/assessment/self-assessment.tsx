@@ -258,10 +258,7 @@ export function SelfAssessment() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
-  const [AsscessmentCount, setAsscessmentCount] = useState(() => {
-    const saved = localStorage.getItem("AsscessmentCount");
-    return saved ? Number(saved) : 0;
-  });
+  const [AsscessmentCount, setAsscessmentCount] = useState(0);
   const [results, setResults] = useState<AssessmentResult | null>(null);
   const { toast } = useToast();
 
@@ -454,8 +451,9 @@ Emergency Contacts:
   const progress = ((currentQuestion + 1) / assessmentQuestions.length) * 100;
 
   useEffect(() => {
-    localStorage.setItem("AsscessmentCount", AsscessmentCount.toString());
-  }, [AsscessmentCount]);
+    const saved = localStorage.getItem("AsscessmentCount");
+    setAsscessmentCount(saved ? Number(saved) : 0);
+  }, []);
 
   // Welcome Screen
   if (!hasStarted && !isCompleted) {
