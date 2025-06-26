@@ -1,111 +1,72 @@
 "use client";
 
-import type React from "react";
-
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/components/providers/auth-provider";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { title } from "process";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [Name, SetName] = useState("");
-  const { login } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-      const data = await response.json();
+      const data = await res.json();
+      console.log(data);
+      if (!res.ok) {
+        return toast({
+          title: "Error",
+          description: data.message || "Invalid email or password.",
+          variant: "destructive",
+        });
+      }
 
-      if (response.ok) {
+      if (data.token) {
         localStorage.setItem("token", data.token);
-
+        console.log("Redirecting to /profile..."); // <-- Add this
         toast({
-          title: "Login successful!",
-          description: "Redirecting...",
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
         });
-        router.push("/dashboard");
-      } else if (response.status === 401) {
-        toast({ title: "Invalid email or password. Please try again." });
-      } else if (response.status === 403) {
-        toast({
-          title: "Your account is not authorized to access this resource.",
-        });
-      } else if (response.status === 500) {
-        toast({ title: "A server error occurred. Please try again later." });
+        router.push("/profile"); // or wherever you want
       } else {
-        toast(
-          data.message || { title: "Login failed. Check your credentials." }
-        );
+        toast({
+          title: "Unexpected error",
+          description: "Token not received. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast({ title: "An error occurred while logging in." });
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/user-details`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const data = await response.json();
-
-        if (response.ok) {
-          SetName(data.firstname + " " + data.lastname);
-          localStorage.setItem("name", data.firstname + " " + data.lastname);
-          console.log(data);
-        } else {
-          console.error("Failed to fetch user details:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
   const handleGoogleLogin = () => {
-    // Mock Google OAuth
     toast({
       title: "Google Sign In",
       description: "Google OAuth integration would be implemented here.",

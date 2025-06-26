@@ -10,10 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// Combined User Routes (for auth + profile)
 const authRoutes = require("./routes/authRoutes");
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes); // all endpoints under /api/auth/*
 
+// Connect to MongoDB and start server
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {

@@ -29,7 +29,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useEffect, useState } from "react";
 
 const mockMoodData = [
   { date: "2024-01-01", mood: 7, anxiety: 3, stress: 4 },
@@ -50,9 +49,7 @@ const mockAssessmentData = [
 
 export function DashboardOverview() {
   const { user } = useAuth();
-
-  const [name, SetName] = useState("");
-  const [role, Setrole] = useState("");
+  // const [Count, SetCount] = useState(localStorage.getItem("count"));
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
@@ -67,48 +64,13 @@ export function DashboardOverview() {
     }
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/user-details`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const data = await response.json();
-
-        if (response.ok) {
-          SetName(data.name);
-          Setrole(data.role);
-          localStorage.setItem("name", data.name);
-          console.log(data);
-        } else {
-          console.error("Failed to fetch user details:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {name}
+            Welcome back, {user?.name}
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
             Here's your mental health overview for today
@@ -134,7 +96,9 @@ export function DashboardOverview() {
             <Brain className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">
+              {localStorage.getItem("count")}
+            </div>
             <p className="text-xs text-muted-foreground">+2 from last week</p>
           </CardContent>
         </Card>
@@ -156,7 +120,9 @@ export function DashboardOverview() {
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">
+              {localStorage.getItem("AsscessmentCount")}
+            </div>
             <p className="text-xs text-muted-foreground">
               Completed this month
             </p>
@@ -201,8 +167,9 @@ export function DashboardOverview() {
                   }
                   formatter={(value, name) => [
                     value,
-                    String(name).charAt(0).toUpperCase() +
-                      String(name).slice(1),
+                    typeof name === "string"
+                      ? name.charAt(0).toUpperCase() + name.slice(1)
+                      : String(name),
                   ]}
                 />
                 <Line

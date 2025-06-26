@@ -1,123 +1,150 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Mic, MicOff, Upload, FileText, Download, Brain, AlertTriangle } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import {
+  Mic,
+  MicOff,
+  Upload,
+  FileText,
+  Download,
+  Brain,
+  AlertTriangle,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface AnalysisResult {
   sentiment: {
-    score: number
-    label: string
-  }
+    score: number;
+    label: string;
+  };
   emotions: {
-    joy: number
-    sadness: number
-    anger: number
-    fear: number
-    surprise: number
-  }
+    joy: number;
+    sadness: number;
+    anger: number;
+    fear: number;
+    surprise: number;
+  };
   riskAssessment: {
-    suicideRisk: number
-    depressionRisk: number
-    anxietyRisk: number
-  }
+    suicideRisk: number;
+    depressionRisk: number;
+    anxietyRisk: number;
+  };
   mentalHealthIndicators: {
-    stressLevel: number
-    moodStability: number
-    cognitiveClarity: number
-  }
+    stressLevel: number;
+    moodStability: number;
+    cognitiveClarity: number;
+  };
 }
 
 export function MentalHealthCheck() {
-  const [textInput, setTextInput] = useState("")
-  const [isRecording, setIsRecording] = useState(false)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const { toast } = useToast()
+  const [textInput, setTextInput] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  // const [Count, SetCount] = useState(0);
+  const [Count, setCount] = useState(() => {
+    const saved = localStorage.getItem("count");
+    return saved ? Number(saved) : 0;
+  });
+
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
+    null
+  );
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const { toast } = useToast();
 
   const handleSpeechToText = () => {
-    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+    if (
+      !("webkitSpeechRecognition" in window) &&
+      !("SpeechRecognition" in window)
+    ) {
       toast({
         title: "Speech Recognition Not Supported",
         description: "Your browser does not support speech recognition.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    const recognition = new SpeechRecognition()
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
 
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = "en-US"
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
 
     if (isRecording) {
-      recognition.stop()
-      setIsRecording(false)
+      recognition.stop();
+      setIsRecording(false);
     } else {
-      recognition.start()
-      setIsRecording(true)
+      recognition.start();
+      setIsRecording(true);
 
       recognition.onresult = (event) => {
-        let transcript = ""
+        let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript
+          transcript += event.results[i][0].transcript;
         }
-        setTextInput((prev) => prev + " " + transcript)
-      }
+        setTextInput((prev) => prev + " " + transcript);
+      };
 
       recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error)
-        setIsRecording(false)
+        console.error("Speech recognition error:", event.error);
+        setIsRecording(false);
         toast({
           title: "Speech Recognition Error",
-          description: "There was an error with speech recognition. Please try again.",
+          description:
+            "There was an error with speech recognition. Please try again.",
           variant: "destructive",
-        })
-      }
+        });
+      };
 
       recognition.onend = () => {
-        setIsRecording(false)
-      }
+        setIsRecording(false);
+      };
     }
-  }
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith("text/") || file.name.endsWith(".txt")) {
-        setUploadedFile(file)
-        const reader = new FileReader()
+        setUploadedFile(file);
+        const reader = new FileReader();
         reader.onload = (e) => {
-          const content = e.target?.result as string
-          setTextInput(content)
-        }
-        reader.readAsText(file)
+          const content = e.target?.result as string;
+          setTextInput(content);
+        };
+        reader.readAsText(file);
         toast({
           title: "File Uploaded",
           description: `${file.name} has been uploaded successfully.`,
-        })
+        });
       } else {
         toast({
           title: "Invalid File Type",
           description: "Please upload a text file (.txt).",
           variant: "destructive",
-        })
+        });
       }
     }
-  }
+  };
 
   const analyzeText = async () => {
     if (!textInput.trim()) {
@@ -125,21 +152,26 @@ export function MentalHealthCheck() {
         title: "No Input",
         description: "Please enter some text to analyze.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsAnalyzing(true)
+    setIsAnalyzing(true);
 
     try {
       // Simulate API call to AI service
-      await new Promise((resolve) => setTimeout(resolve, 3000))
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Mock analysis result
       const mockResult: AnalysisResult = {
         sentiment: {
           score: Math.random() * 2 - 1, // -1 to 1
-          label: Math.random() > 0.5 ? "Positive" : Math.random() > 0.25 ? "Neutral" : "Negative",
+          label:
+            Math.random() > 0.5
+              ? "Positive"
+              : Math.random() > 0.25
+              ? "Neutral"
+              : "Negative",
         },
         emotions: {
           joy: Math.random() * 100,
@@ -158,26 +190,27 @@ export function MentalHealthCheck() {
           moodStability: Math.random() * 100,
           cognitiveClarity: Math.random() * 100,
         },
-      }
+      };
 
-      setAnalysisResult(mockResult)
+      setAnalysisResult(mockResult);
       toast({
         title: "Analysis Complete",
         description: "Your mental health analysis is ready.",
-      })
+      });
     } catch (error) {
       toast({
         title: "Analysis Failed",
-        description: "There was an error analyzing your text. Please try again.",
+        description:
+          "There was an error analyzing your text. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsAnalyzing(false)
+      setIsAnalyzing(false);
     }
-  }
+  };
 
   const downloadReport = () => {
-    if (!analysisResult) return
+    if (!analysisResult) return;
 
     const reportContent = `
 Mental Health Analysis Report
@@ -201,69 +234,104 @@ Anxiety Risk: ${analysisResult.riskAssessment.anxietyRisk.toFixed(1)}%
 
 MENTAL HEALTH INDICATORS
 Stress Level: ${analysisResult.mentalHealthIndicators.stressLevel.toFixed(1)}%
-Mood Stability: ${analysisResult.mentalHealthIndicators.moodStability.toFixed(1)}%
-Cognitive Clarity: ${analysisResult.mentalHealthIndicators.cognitiveClarity.toFixed(1)}%
+Mood Stability: ${analysisResult.mentalHealthIndicators.moodStability.toFixed(
+      1
+    )}%
+Cognitive Clarity: ${analysisResult.mentalHealthIndicators.cognitiveClarity.toFixed(
+      1
+    )}%
 
 RECOMMENDATIONS
 - Consider speaking with a mental health professional
 - Practice mindfulness and stress reduction techniques
 - Maintain regular sleep and exercise routines
 - Stay connected with supportive friends and family
-    `
+    `;
 
-    const blob = new Blob([reportContent], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `mental-health-report-${new Date().toISOString().split("T")[0]}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    const blob = new Blob([reportContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mental-health-report-${
+      new Date().toISOString().split("T")[0]
+    }.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 
     toast({
       title: "Report Downloaded",
       description: "Your mental health report has been downloaded.",
-    })
-  }
+    });
+  };
 
   const getRiskColor = (risk: number) => {
-    if (risk < 30) return "text-green-600"
-    if (risk < 70) return "text-yellow-600"
-    return "text-red-600"
-  }
+    if (risk < 30) return "text-green-600";
+    if (risk < 70) return "text-yellow-600";
+    return "text-red-600";
+  };
 
   const getRiskBadgeColor = (risk: number) => {
-    if (risk < 30) return "bg-green-100 text-green-800"
-    if (risk < 70) return "bg-yellow-100 text-yellow-800"
-    return "bg-red-100 text-red-800"
-  }
+    if (risk < 30) return "bg-green-100 text-green-800";
+    if (risk < 70) return "bg-yellow-100 text-yellow-800";
+    return "bg-red-100 text-red-800";
+  };
 
   const emotionData = analysisResult
     ? [
         { name: "Joy", value: analysisResult.emotions.joy, fill: "#10b981" },
-        { name: "Sadness", value: analysisResult.emotions.sadness, fill: "#3b82f6" },
-        { name: "Anger", value: analysisResult.emotions.anger, fill: "#ef4444" },
+        {
+          name: "Sadness",
+          value: analysisResult.emotions.sadness,
+          fill: "#3b82f6",
+        },
+        {
+          name: "Anger",
+          value: analysisResult.emotions.anger,
+          fill: "#ef4444",
+        },
         { name: "Fear", value: analysisResult.emotions.fear, fill: "#f59e0b" },
-        { name: "Surprise", value: analysisResult.emotions.surprise, fill: "#8b5cf6" },
+        {
+          name: "Surprise",
+          value: analysisResult.emotions.surprise,
+          fill: "#8b5cf6",
+        },
       ]
-    : []
+    : [];
 
   const riskData = analysisResult
     ? [
-        { name: "Suicide Risk", value: analysisResult.riskAssessment.suicideRisk },
-        { name: "Depression Risk", value: analysisResult.riskAssessment.depressionRisk },
-        { name: "Anxiety Risk", value: analysisResult.riskAssessment.anxietyRisk },
+        {
+          name: "Suicide Risk",
+          value: analysisResult.riskAssessment.suicideRisk,
+        },
+        {
+          name: "Depression Risk",
+          value: analysisResult.riskAssessment.depressionRisk,
+        },
+        {
+          name: "Anxiety Risk",
+          value: analysisResult.riskAssessment.anxietyRisk,
+        },
       ]
-    : []
+    : [];
+
+  // Sync to localStorage on count change
+  useEffect(() => {
+    localStorage.setItem("count", Count.toString());
+  }, [Count]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">AI-Powered Mental Health Check</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            AI-Powered Mental Health Check
+          </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Analyze your text, speech, or social media posts for mental health insights
+            Analyze your text, speech, or social media posts for mental health
+            insights
           </p>
         </div>
       </div>
@@ -276,7 +344,9 @@ RECOMMENDATIONS
               <Brain className="mr-2 h-5 w-5" />
               Input Your Content
             </CardTitle>
-            <CardDescription>Enter text, use speech-to-text, or upload a file for analysis</CardDescription>
+            <CardDescription>
+              Enter text, use speech-to-text, or upload a file for analysis
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs defaultValue="text" className="w-full">
@@ -326,7 +396,8 @@ RECOMMENDATIONS
                     </div>
                   )}
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Click to start recording your voice. Your speech will be converted to text automatically.
+                    Click to start recording your voice. Your speech will be
+                    converted to text automatically.
                   </p>
                 </div>
               </TabsContent>
@@ -349,7 +420,9 @@ RECOMMENDATIONS
                           onChange={handleFileUpload}
                         />
                       </label>
-                      <p className="mt-1 text-xs text-gray-500">Supports .txt files up to 10MB</p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Supports .txt files up to 10MB
+                      </p>
                     </div>
                   </div>
                   {uploadedFile && (
@@ -362,7 +435,14 @@ RECOMMENDATIONS
               </TabsContent>
             </Tabs>
 
-            <Button onClick={analyzeText} className="w-full" disabled={isAnalyzing || !textInput.trim()}>
+            <Button
+              onClick={() => {
+                analyzeText();
+                setCount((prev) => prev + 1);
+              }}
+              className="w-full"
+              disabled={isAnalyzing || !textInput.trim()}
+            >
               {isAnalyzing ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -382,14 +462,17 @@ RECOMMENDATIONS
         <Card>
           <CardHeader>
             <CardTitle>Analysis Results</CardTitle>
-            <CardDescription>AI-powered insights into your mental health indicators</CardDescription>
+            <CardDescription>
+              AI-powered insights into your mental health indicators
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {!analysisResult ? (
               <div className="text-center py-12">
                 <Brain className="mx-auto h-12 w-12 text-gray-400" />
                 <p className="mt-4 text-gray-500">
-                  Enter some text and click "Analyze Mental Health" to see your results
+                  Enter some text and click "Analyze Mental Health" to see your
+                  results
                 </p>
               </div>
             ) : (
@@ -398,13 +481,24 @@ RECOMMENDATIONS
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold">Sentiment Analysis</h3>
-                    <Badge variant={analysisResult.sentiment.score > 0 ? "default" : "destructive"}>
+                    <Badge
+                      variant={
+                        analysisResult.sentiment.score > 0
+                          ? "default"
+                          : "destructive"
+                      }
+                    >
                       {analysisResult.sentiment.label}
                     </Badge>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Progress value={((analysisResult.sentiment.score + 1) / 2) * 100} className="flex-1" />
-                    <span className="text-sm font-medium">{analysisResult.sentiment.score.toFixed(2)}</span>
+                    <Progress
+                      value={((analysisResult.sentiment.score + 1) / 2) * 100}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium">
+                      {analysisResult.sentiment.score.toFixed(2)}
+                    </span>
                   </div>
                 </div>
 
@@ -417,12 +511,20 @@ RECOMMENDATIONS
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm">{risk.name}</span>
                           <Badge className={getRiskBadgeColor(risk.value)}>
-                            {risk.value < 30 ? "Low" : risk.value < 70 ? "Moderate" : "High"}
+                            {risk.value < 30
+                              ? "Low"
+                              : risk.value < 70
+                              ? "Moderate"
+                              : "High"}
                           </Badge>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Progress value={risk.value} className="flex-1" />
-                          <span className={`text-sm font-medium ${getRiskColor(risk.value)}`}>
+                          <span
+                            className={`text-sm font-medium ${getRiskColor(
+                              risk.value
+                            )}`}
+                          >
                             {risk.value.toFixed(1)}%
                           </span>
                         </div>
@@ -437,11 +539,18 @@ RECOMMENDATIONS
                     <div className="flex items-start space-x-2">
                       <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
                       <div>
-                        <h4 className="font-semibold text-red-900 dark:text-red-100">High Risk Detected</h4>
+                        <h4 className="font-semibold text-red-900 dark:text-red-100">
+                          High Risk Detected
+                        </h4>
                         <p className="text-sm text-red-700 dark:text-red-200 mt-1">
-                          Our AI has detected concerning patterns. Please consider reaching out for immediate support.
+                          Our AI has detected concerning patterns. Please
+                          consider reaching out for immediate support.
                         </p>
-                        <Button size="sm" className="mt-2" variant="destructive">
+                        <Button
+                          size="sm"
+                          className="mt-2"
+                          variant="destructive"
+                        >
                           Get Crisis Support
                         </Button>
                       </div>
@@ -449,7 +558,11 @@ RECOMMENDATIONS
                   </div>
                 )}
 
-                <Button onClick={downloadReport} variant="outline" className="w-full">
+                <Button
+                  onClick={downloadReport}
+                  variant="outline"
+                  className="w-full"
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download Full Report
                 </Button>
@@ -465,7 +578,9 @@ RECOMMENDATIONS
           <Card>
             <CardHeader>
               <CardTitle>Emotional Analysis</CardTitle>
-              <CardDescription>Distribution of detected emotions</CardDescription>
+              <CardDescription>
+                Distribution of detected emotions
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -475,7 +590,9 @@ RECOMMENDATIONS
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) =>
+                      `${name} ${(percent * 100).toFixed(0)}%`
+                    }
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -493,7 +610,9 @@ RECOMMENDATIONS
           <Card>
             <CardHeader>
               <CardTitle>Mental Health Indicators</CardTitle>
-              <CardDescription>Key psychological wellness metrics</CardDescription>
+              <CardDescription>
+                Key psychological wellness metrics
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -501,30 +620,49 @@ RECOMMENDATIONS
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Stress Level</span>
                     <span className="text-sm text-muted-foreground">
-                      {analysisResult.mentalHealthIndicators.stressLevel.toFixed(1)}%
+                      {analysisResult.mentalHealthIndicators.stressLevel.toFixed(
+                        1
+                      )}
+                      %
                     </span>
                   </div>
-                  <Progress value={analysisResult.mentalHealthIndicators.stressLevel} />
+                  <Progress
+                    value={analysisResult.mentalHealthIndicators.stressLevel}
+                  />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Mood Stability</span>
                     <span className="text-sm text-muted-foreground">
-                      {analysisResult.mentalHealthIndicators.moodStability.toFixed(1)}%
+                      {analysisResult.mentalHealthIndicators.moodStability.toFixed(
+                        1
+                      )}
+                      %
                     </span>
                   </div>
-                  <Progress value={analysisResult.mentalHealthIndicators.moodStability} />
+                  <Progress
+                    value={analysisResult.mentalHealthIndicators.moodStability}
+                  />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Cognitive Clarity</span>
+                    <span className="text-sm font-medium">
+                      Cognitive Clarity
+                    </span>
                     <span className="text-sm text-muted-foreground">
-                      {analysisResult.mentalHealthIndicators.cognitiveClarity.toFixed(1)}%
+                      {analysisResult.mentalHealthIndicators.cognitiveClarity.toFixed(
+                        1
+                      )}
+                      %
                     </span>
                   </div>
-                  <Progress value={analysisResult.mentalHealthIndicators.cognitiveClarity} />
+                  <Progress
+                    value={
+                      analysisResult.mentalHealthIndicators.cognitiveClarity
+                    }
+                  />
                 </div>
               </div>
             </CardContent>
@@ -532,5 +670,8 @@ RECOMMENDATIONS
         </div>
       )}
     </div>
-  )
+  );
 }
+// Remove this: it's not needed. The real useEffect is already imported from React at the top.
+// If you want to define a custom hook, use a different name.
+// If this was accidentally added by an IDE, just delete it.

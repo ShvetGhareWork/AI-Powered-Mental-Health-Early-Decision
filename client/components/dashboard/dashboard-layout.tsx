@@ -1,10 +1,11 @@
 "use client";
 
 import type React from "react";
+import { useState } from "react";
 
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   SidebarProvider,
   Sidebar,
@@ -38,6 +39,7 @@ import {
   Bell,
   ChevronDown,
   User,
+  Heart,
 } from "lucide-react";
 import Link from "next/link";
 import { useNotifications } from "@/components/providers/notification-provider";
@@ -47,7 +49,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Mental Health Check", url: "/mental-health-check", icon: Brain },
   { title: "Self Assessment", url: "/assessment", icon: ClipboardList },
-  { title: "AI Chatbot", url: "/chatbot", icon: MessageSquare },
+  { title: "Mood Tracker", url: "/moodtracker", icon: Heart },
   { title: "Resources", url: "/resources", icon: BookOpen },
   { title: "Profile", url: "/profile", icon: User },
 ];
@@ -57,16 +59,33 @@ const counselorItems = [
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  // const { user, logout } = useAuth()
   const { notifications } = useNotifications();
+  const [UserDetails, setUserDetails] = useState({});
   const router = useRouter();
-  const [name, SetName] = useState("");
-  const [role, Setrole] = useState("");
+
+  // useEffect(() => {
+  //   if (!user) {
+  //     router.push("/auth/login")
+  //   }
+  // }, [user, router])
+
+  // if (!user) {
+  //   return null
+  // }
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserDetails = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in to access your profile.",
+          variant: "destructive",
+        });
+        router.push("/auth/login");
+        return;
+      }
 
       try {
         const response = await fetch(
@@ -80,41 +99,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           }
         );
 
-        const data = await response.json();
-
-        if (response.ok) {
-          SetName(data.name);
-          Setrole(data.role);
-          localStorage.setItem("name", data.name);
-          console.log(data);
-        } else {
-          console.error("Failed to fetch user details:", data.message);
+        if (!response.ok) {
+          console.error("Failed to fetch user details");
+          router.push("/auth/login");
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
+
+        const data = await response.json();
+        console.log("Fetched User Details:", data);
+        setUserDetails(data);
+      } catch (err) {
+        console.error("Failed to fetch user details:", err);
+        router.push("/auth/login");
       }
     };
-
-    fetchUser();
+    fetchUserDetails();
   }, []);
-  useEffect(() => {
-    if (!user) {
-      router.push("/auth/login");
-    }
-  }, [user, router]);
-
-  if (!user) {
-    return null;
-  }
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const allMenuItems = [
-    ...menuItems,
-    ...(user.role === "counselor" || user.role === "admin"
-      ? counselorItems
-      : []),
-  ];
+  // const allMenuItems = [...menuItems, ...(user.role === "counselor" || user.role === "admin" ? counselorItems : [])]
 
   return (
     <SidebarProvider>
@@ -129,7 +133,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           <SidebarContent>
             <SidebarMenu>
-              {allMenuItems.map((item) => (
+              {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url}>
@@ -149,18 +153,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuTrigger asChild>
                     <SidebarMenuButton className="w-full">
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={user.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>
-                          {user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
+                        <AvatarImage src={"/placeholder.svg"} />
+                        <AvatarFallback></AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col items-start">
-                        <span className="text-sm font-medium">{name}</span>
+                        <span className="text-sm font-medium">
+                          {UserDetails.name}{" "}
+                        </span>
                         <span className="text-xs text-muted-foreground capitalize">
-                          {role}
+                          {UserDetails.role}
                         </span>
                       </div>
                       <ChevronDown className="ml-auto h-4 w-4" />
@@ -174,7 +175,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("count");
+                        localStorage.removeItem("AsscessmentCount");
+                        router.push("/auth/login");
+                      }}
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign out
                     </DropdownMenuItem>
