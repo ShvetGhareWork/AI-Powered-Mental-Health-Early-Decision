@@ -49,6 +49,8 @@ const mockAssessmentData = [
 
 export function DashboardOverview() {
   const { user } = useAuth();
+  const Accessmentcount = localStorage.getItem("AsscessmentCount");
+  const count = localStorage.getItem("count");
   // const [Count, SetCount] = useState(localStorage.getItem("count"));
 
   const getRiskColor = (risk: string) => {
@@ -97,7 +99,8 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {localStorage.getItem("count")}
+              {/* {localStorage.getItem("count")} */}
+              {count}
             </div>
             <p className="text-xs text-muted-foreground">+2 from last week</p>
           </CardContent>
@@ -121,7 +124,8 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {localStorage.getItem("AsscessmentCount")}
+              {/* {localStorage.getItem("AsscessmentCount")} */}
+              {Accessmentcount}
             </div>
             <p className="text-xs text-muted-foreground">
               Completed this month
