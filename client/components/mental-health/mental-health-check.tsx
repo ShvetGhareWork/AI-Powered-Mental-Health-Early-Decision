@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { useRouter } from "next/navigation";
+import { title } from "process";
 
 interface AnalysisResult {
   sentiment: {
@@ -52,11 +54,22 @@ interface AnalysisResult {
   };
 }
 
-export function MentalHealthCheck() {
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
+export function MentalHealthCheck({ userId }: { userId: string }) {
   const [textInput, setTextInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   // const [Count, SetCount] = useState(0);
-  const [Count, setCount] = useState(0);
+  const [Count, setCount] = useState("");
+  const router = useRouter();
+  const [UserDetails, setUserDetails] = useState({
+    _id: "",
+  });
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
@@ -65,43 +78,73 @@ export function MentalHealthCheck() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const { toast } = useToast();
 
-  const handleSpeechToText = () => {
-    if (
-      !("webkitSpeechRecognition" in window) &&
-      !("SpeechRecognition" in window)
-    ) {
-      toast({
-        title: "Speech Recognition Not Supported",
-        description: "Your browser does not support speech recognition.",
-        variant: "destructive",
-      });
-      return;
+  const [healthChecksToday, setHealthChecksToday] = useState(0);
+
+  const handleHealthCheck = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/health/health-check/${UserDetails._id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        setHealthChecksToday(data.healthChecksToday);
+        toast({ title: "✅ Health check recorded!", variant: "default" });
+      } else {
+        toast({
+          title: "❌ Error recording health check",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast({ title: "❌ Something went wrong.", variant: "destructive" });
     }
+  };
+  const recognitionRef = useRef<any>(null);
 
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+  useEffect(() => {
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
 
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
 
-    if (isRecording) {
-      recognition.stop();
-      setIsRecording(false);
-    } else {
-      recognition.start();
-      setIsRecording(true);
+      recognitionRef.current = recognition;
 
-      recognition.onresult = (event) => {
+      interface SpeechRecognitionResult {
+        [index: number]: {
+          transcript: string;
+        };
+      }
+
+      interface SpeechRecognitionEvent extends Event {
+        resultIndex: number;
+        results: SpeechRecognitionResult[];
+      }
+
+      (recognition as any).onresult = (event: SpeechRecognitionEvent) => {
         let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript;
         }
-        setTextInput((prev) => prev + " " + transcript);
+        setTextInput((prev: string) => prev + " " + transcript);
       };
 
-      recognition.onerror = (event) => {
+      interface SpeechRecognitionErrorEvent extends Event {
+        error: string;
+      }
+
+      (recognition as any).onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
         setIsRecording(false);
         toast({
@@ -116,12 +159,44 @@ export function MentalHealthCheck() {
         setIsRecording(false);
       };
     }
+  }, []);
+
+  const handleSpeechToText = () => {
+    if (!recognitionRef.current) {
+      toast({
+        title: "Speech Recognition Not Supported",
+        description: "Your browser does not support speech recognition.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    } else {
+      recognitionRef.current.start();
+      setIsRecording(true);
+    }
   };
 
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type.startsWith("text/") || file.name.endsWith(".txt")) {
+      if (
+        file.type.startsWith("text/") ||
+        file.name.endsWith(".txt") ||
+        file.name.endsWith(".pdf") ||
+        file.name.endsWith(".mp3") ||
+        file.name.endsWith(".mp4")
+      ) {
         setUploadedFile(file);
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -314,10 +389,47 @@ RECOMMENDATIONS
       ]
     : [];
 
-  // Sync to localStorage on count change
+  // Fetch user details
   useEffect(() => {
-    const saved = localStorage.getItem("count");
-    setCount(saved ? Number(saved) : 0);
+    const fetchUserDetails = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in to access your profile.",
+          variant: "destructive",
+        });
+        router.push("/auth/login");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/user-details`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.error("Failed to fetch user details");
+          router.push("/auth/login");
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched User Details:", data);
+        setUserDetails(data);
+      } catch (err) {
+        console.error("Failed to fetch user details:", err);
+        router.push("/auth/login");
+      }
+    };
+    fetchUserDetails();
   }, []);
 
   return (
@@ -414,12 +526,12 @@ RECOMMENDATIONS
                           id="file-upload"
                           type="file"
                           className="sr-only"
-                          accept=".txt,text/plain"
+                          accept="video/*,application/pdf,text/plain"
                           onChange={handleFileUpload}
                         />
                       </label>
                       <p className="mt-1 text-xs text-gray-500">
-                        Supports .txt files up to 10MB
+                        Supports .txt, .pdf, video files up to 10MB
                       </p>
                     </div>
                   </div>
@@ -436,7 +548,8 @@ RECOMMENDATIONS
             <Button
               onClick={() => {
                 analyzeText();
-                setCount((prev) => prev + 1);
+                // setCount((prev) => prev + 1);
+                handleHealthCheck();
               }}
               className="w-full"
               disabled={isAnalyzing || !textInput.trim()}
@@ -589,7 +702,7 @@ RECOMMENDATIONS
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
+                      `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
                     }
                     outerRadius={80}
                     fill="#8884d8"

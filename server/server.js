@@ -14,6 +14,9 @@ app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes); // all endpoints under /api/auth/*
 
+const healthRoutes = require("./routes/healthRoutes");
+app.use("/api/health", healthRoutes);
+
 // Connect to MongoDB and start server
 mongoose
   .connect(process.env.MONGO_URI)

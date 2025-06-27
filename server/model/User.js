@@ -40,6 +40,14 @@ const userSchema = new mongoose.Schema(
     therapistName: { type: String },
     insuranceProvider: { type: String },
     emergencyMedicalConditions: { type: String },
+
+    // Health Details
+    healthDetails: {
+      healthChecksToday: { type: Number, default: 0 },
+      assessmentsToday: { type: Number, default: 0 },
+      chatSessionsToday: { type: Number, default: 0 },
+      lastResetAt: { type: Date, default: Date.now },
+    },
   },
   { timestamps: true }
 );

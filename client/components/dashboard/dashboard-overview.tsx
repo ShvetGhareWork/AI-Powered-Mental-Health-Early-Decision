@@ -32,6 +32,7 @@ import {
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { title } from "process";
 
 const mockMoodData = [
   { date: "2024-01-01", mood: 7, anxiety: 3, stress: 4 },
@@ -43,26 +44,58 @@ const mockMoodData = [
   { date: "2024-01-07", mood: 6, anxiety: 4, stress: 5 },
 ];
 
-const mockAssessmentData = [
-  { category: "Depression", score: 12, maxScore: 27, risk: "Low" },
-  { category: "Anxiety", score: 8, maxScore: 21, risk: "Low" },
-  { category: "Stress", score: 15, maxScore: 21, risk: "Moderate" },
-  { category: "Sleep Quality", score: 6, maxScore: 12, risk: "High" },
-];
+type AssessmentCategory = {
+  category: string;
+  score: number;
+  maxScore: number;
+  risk: string;
+};
 
 export function DashboardOverview() {
+  const [assessmentData, setAssessmentData] = useState<AssessmentCategory[]>(
+    []
+  );
   const { user } = useAuth();
-  const [count1, setcount1] = useState("");
-  const [count2, setcount2] = useState("");
-  const [UserDetails, setUserDetails] = useState({
-    name: "",
-  });
+
+  const [UserDetailsName, setUserDetailsName] = useState("");
+  const [UserDetailsId, setUserDetailsId] = useState("");
+
+  const userId = UserDetailsId;
   const router = useRouter();
   const { toast } = useToast();
+  const [HealthChecksToday, setHealthChecksToday] = useState(0);
+  const [AssessmentsToday, setAssessmentsToday] = useState(0);
+  const [MoodSessionsToday, setMoodSessionsToday] = useState(0);
 
-  // const Accessmentcount = localStorage.getItem("AsscessmentCount");
-  // const count = localStorage.getItem("count");
-  // const [Count, SetCount] = useState(localStorage.getItem("count"));
+  const getRiskLevel = (score: number, maxScore: number) => {
+    const percentage = (score / maxScore) * 100;
+    if (percentage >= 75) return "High";
+    if (percentage >= 50) return "Moderate";
+    return "Low";
+  };
+
+  const generateMockAssessmentData = (): AssessmentCategory[] => {
+    const categories = [
+      { category: "Depression", maxScore: 27 },
+      { category: "Anxiety", maxScore: 21 },
+      { category: "Stress", maxScore: 21 },
+      { category: "Sleep Quality", maxScore: 12 },
+    ];
+
+    return categories.map((item) => {
+      const score = Math.floor(Math.random() * (item.maxScore + 1)); // 0 to maxScore
+      return {
+        category: item.category,
+        score,
+        maxScore: item.maxScore,
+        risk: getRiskLevel(score, item.maxScore),
+      };
+    });
+  };
+
+  useEffect(() => {
+    setAssessmentData(generateMockAssessmentData());
+  }, []);
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
@@ -76,15 +109,42 @@ export function DashboardOverview() {
         return "bg-gray-100 text-gray-800";
     }
   };
+  const fetchHealthStats = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/health/stats/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-  useEffect(() => {
-    const saved = localStorage.getItem("count");
-    const Accessmentcount = localStorage.getItem("AsscessmentCount");
-    saved ? Number(saved) : 0;
-    Accessmentcount ? Number(Accessmentcount) : 0;
-    setcount1(saved || "");
-    setcount2(Accessmentcount || "");
-  }, []);
+      const data = await response.json();
+
+      if (response.ok) {
+        setHealthChecksToday(data.healthChecksToday);
+        setAssessmentsToday(data.assessmentsToday);
+        setMoodSessionsToday(data.chatSessionsToday);
+        // toast({
+        //   title: "📊 Stats fetched successfully!",
+        //   variant: "default",
+        // });
+      } else {
+        toast({
+          title: "❌ Error fetching health stats",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast({
+        title: "❌ Something went wrong while fetching stats.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -118,15 +178,23 @@ export function DashboardOverview() {
         }
 
         const data = await response.json();
-        console.log("Fetched User Details:", data);
-        setUserDetails(data);
+        console.log("Fetched User Details:", data._id);
+        setUserDetailsName(data.name);
+        setUserDetailsId(data._id); // use _id not id
       } catch (err) {
         console.error("Failed to fetch user details:", err);
         router.push("/auth/login");
       }
     };
+
     fetchUserDetails();
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      fetchHealthStats();
+    }
+  }, [userId]);
 
   return (
     <div className="space-y-6">
@@ -134,7 +202,7 @@ export function DashboardOverview() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {UserDetails.name}
+            Welcome back, {UserDetailsName}
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">
             Here's your mental health overview for today
@@ -160,21 +228,18 @@ export function DashboardOverview() {
             <Brain className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {count1} {/* {count} */}
-              12
-            </div>
+            <div className="text-2xl font-bold">{HealthChecksToday}</div>
             <p className="text-xs text-muted-foreground">+2 from last week</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Chat Sessions</CardTitle>
+            <CardTitle className="text-sm font-medium">Mood Checks</CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">{MoodSessionsToday}</div>
             <p className="text-xs text-muted-foreground">+1 from yesterday</p>
           </CardContent>
         </Card>
@@ -185,9 +250,7 @@ export function DashboardOverview() {
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {count2} {/* {Accessmentcount} */}2
-            </div>
+            <div className="text-2xl font-bold">{AssessmentsToday}</div>
             <p className="text-xs text-muted-foreground">
               Completed this month
             </p>
@@ -269,7 +332,7 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockAssessmentData.map((item, index) => (
+              {assessmentData.map((item, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{item.category}</span>

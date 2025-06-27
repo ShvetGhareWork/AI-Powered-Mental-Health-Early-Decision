@@ -55,6 +55,7 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
+import { useRouter } from "next/navigation";
 
 // Types
 interface MoodEntry {
@@ -253,6 +254,7 @@ export function MoodTracker() {
   const [entryStep, setEntryStep] = useState(1);
   const [newEntry, setNewEntry] = useState(initialEntryState);
   const { toast } = useToast();
+  const router = useRouter();
 
   // Generate mock data
   useEffect(() => {
@@ -837,6 +839,82 @@ export function MoodTracker() {
   const todayEntry = moodEntries.find((entry) => isToday(entry.date));
   const analysis = analyzeMentalHealth(moodEntries);
 
+  const [AccessmentChecksToday, setAccessmentChecksToday] = useState(0);
+  const [UserDetails, setUserDetails] = useState({
+    _id: "",
+  });
+
+  const handleAccessmentCheck = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/health/mood-session/${UserDetails._id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        setAccessmentChecksToday(data.healthChecksToday);
+        toast({ title: "✅ Mood recorded!", variant: "default" });
+      } else {
+        toast({
+          title: "❌ Error recording health check",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast({ title: "❌ Something went wrong.", variant: "destructive" });
+    }
+  };
+
+  // Fetch user details
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast({
+          title: "Unauthorized",
+          description: "Please log in to access your profile.",
+          variant: "destructive",
+        });
+        router.push("/auth/login");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/user-details`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.error("Failed to fetch user details");
+          router.push("/auth/login");
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched User Details:", data);
+        setUserDetails(data);
+      } catch (err) {
+        console.error("Failed to fetch user details:", err);
+        router.push("/auth/login");
+      }
+    };
+    fetchUserDetails();
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -854,7 +932,11 @@ export function MoodTracker() {
             <Brain className="mr-2 h-4 w-4" />
             Generate Analysis
           </Button>
-          <Button onClick={() => setShowAddDialog(true)}>
+          <Button
+            onClick={() => {
+              setShowAddDialog(true), handleAccessmentCheck();
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Entry
           </Button>
