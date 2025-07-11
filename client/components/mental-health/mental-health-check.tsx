@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useRouter } from "next/navigation";
 import { title } from "process";
+import axios from "axios";
 
 interface AnalysisResult {
   sentiment: {
@@ -79,6 +80,22 @@ export function MentalHealthCheck({ userId }: { userId: string }) {
   const { toast } = useToast();
 
   const [healthChecksToday, setHealthChecksToday] = useState(0);
+  const [result, setResult] = useState<
+    { emotion: string; confidence: number }[] | null
+  >(null);
+
+  const [mentalHealthResult, setMentalHealthResult] = useState<null | {
+    emotions: { emotion: string; confidence: number }[];
+    mental_health: {
+      suicide_risk: { level: string; percentage: number };
+      anxiety: { level: string; percentage: number };
+      depression: { level: string; percentage: number };
+      stress: { level: string; percentage: number };
+      mood_stability: string;
+      cognitive_clarity: string;
+    };
+    sentiment: { label: string; confidence: number };
+  }>(null);
 
   const handleHealthCheck = async () => {
     try {
@@ -217,6 +234,29 @@ export function MentalHealthCheck({ userId }: { userId: string }) {
       }
     }
   };
+  const handleAnalyze = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ textInput }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await res.json();
+      setResult(data.emotions);
+      console.log("Analysis Result:", data);
+      setMentalHealthResult(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      console.log("Something went wrong during analysis.");
+    }
+  };
 
   const analyzeText = async () => {
     if (!textInput.trim()) {
@@ -235,16 +275,18 @@ export function MentalHealthCheck({ userId }: { userId: string }) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Mock analysis result
+      const sentimentScoreRaw = mentalHealthResult?.sentiment?.confidence ?? 0;
+
+      let sentimentLabel = mentalHealthResult?.sentiment?.label ?? "Neutral";
+      const sentimentScore =
+        sentimentLabel === "Negative" ? -sentimentScoreRaw : sentimentScoreRaw;
+
       const mockResult: AnalysisResult = {
         sentiment: {
-          score: Math.random() * 2 - 1, // -1 to 1
-          label:
-            Math.random() > 0.5
-              ? "Positive"
-              : Math.random() > 0.25
-              ? "Neutral"
-              : "Negative",
+          score: sentimentScore,
+          label: sentimentLabel,
         },
+
         emotions: {
           joy: Math.random() * 100,
           sadness: Math.random() * 100,
@@ -253,14 +295,15 @@ export function MentalHealthCheck({ userId }: { userId: string }) {
           surprise: Math.random() * 100,
         },
         riskAssessment: {
-          suicideRisk: Math.random() * 100,
-          depressionRisk: Math.random() * 100,
-          anxietyRisk: Math.random() * 100,
+          suicideRisk: mentalHealthResult.mental_health.suicide_risk.percentage,
+          depressionRisk:
+            mentalHealthResult.mental_health.depression.percentage,
+          anxietyRisk: mentalHealthResult.mental_health.anxiety.percentage,
         },
         mentalHealthIndicators: {
-          stressLevel: Math.random() * 100,
-          moodStability: Math.random() * 100,
-          cognitiveClarity: Math.random() * 100,
+          stressLevel: mentalHealthResult.mental_health.stress.percentage,
+          moodStability: mentalHealthResult.mental_health.mood_stability,
+          cognitiveClarity: mentalHealthResult.mental_health.cognitive_clarity,
         },
       };
 
@@ -350,41 +393,29 @@ RECOMMENDATIONS
     return "bg-red-100 text-red-800";
   };
 
-  const emotionData = analysisResult
-    ? [
-        { name: "Joy", value: analysisResult.emotions.joy, fill: "#10b981" },
-        {
-          name: "Sadness",
-          value: analysisResult.emotions.sadness,
-          fill: "#3b82f6",
-        },
-        {
-          name: "Anger",
-          value: analysisResult.emotions.anger,
-          fill: "#ef4444",
-        },
-        { name: "Fear", value: analysisResult.emotions.fear, fill: "#f59e0b" },
-        {
-          name: "Surprise",
-          value: analysisResult.emotions.surprise,
-          fill: "#8b5cf6",
-        },
-      ]
+  const pieColors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#627231"];
+
+  const emotionData = result
+    ? result.slice(0, 5).map((item, index) => ({
+        name: item.emotion,
+        value: item.confidence,
+        fill: pieColors[index % pieColors.length],
+      }))
     : [];
 
   const riskData = analysisResult
     ? [
         {
           name: "Suicide Risk",
-          value: analysisResult.riskAssessment.suicideRisk,
+          value: mentalHealthResult?.mental_health.suicide_risk.percentage,
         },
         {
           name: "Depression Risk",
-          value: analysisResult.riskAssessment.depressionRisk,
+          value: mentalHealthResult?.mental_health.depression.percentage,
         },
         {
           name: "Anxiety Risk",
-          value: analysisResult.riskAssessment.anxietyRisk,
+          value: mentalHealthResult?.mental_health.anxiety.percentage,
         },
       ]
     : [];
@@ -473,7 +504,9 @@ RECOMMENDATIONS
                     id="text-input"
                     placeholder="Share your thoughts, feelings, or paste social media posts here..."
                     value={textInput}
-                    onChange={(e) => setTextInput(e.target.value)}
+                    onChange={(e) => {
+                      setTextInput(e.target.value);
+                    }}
                     className="min-h-[200px]"
                   />
                 </div>
@@ -548,6 +581,7 @@ RECOMMENDATIONS
             <Button
               onClick={() => {
                 analyzeText();
+                handleAnalyze();
                 // setCount((prev) => prev + 1);
                 handleHealthCheck();
               }}
@@ -591,7 +625,8 @@ RECOMMENDATIONS
                 {/* Sentiment Score */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold">Sentiment Analysis</h3>
+                    <h3 className="font-semibold">Sentimental Analysis</h3>
+
                     <Badge
                       variant={
                         analysisResult.sentiment.score > 0
@@ -599,7 +634,7 @@ RECOMMENDATIONS
                           : "destructive"
                       }
                     >
-                      {analysisResult.sentiment.label}
+                      {mentalHealthResult?.sentiment.label}
                     </Badge>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -738,23 +773,20 @@ RECOMMENDATIONS
                     </span>
                   </div>
                   <Progress
-                    value={analysisResult.mentalHealthIndicators.stressLevel}
+                    value={
+                      mentalHealthResult?.mental_health.stress.percentage || 0
+                    }
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Mood Stability</span>
-                    <span className="text-sm text-muted-foreground">
-                      {analysisResult.mentalHealthIndicators.moodStability.toFixed(
-                        1
-                      )}
-                      %
-                    </span>
+                    <span className="text-sm text-muted-foreground"></span>
                   </div>
-                  <Progress
-                    value={analysisResult.mentalHealthIndicators.moodStability}
-                  />
+                  <Label>
+                    {analysisResult.mentalHealthIndicators.moodStability}
+                  </Label>
                 </div>
 
                 <div>
@@ -762,18 +794,11 @@ RECOMMENDATIONS
                     <span className="text-sm font-medium">
                       Cognitive Clarity
                     </span>
-                    <span className="text-sm text-muted-foreground">
-                      {analysisResult.mentalHealthIndicators.cognitiveClarity.toFixed(
-                        1
-                      )}
-                      %
-                    </span>
+                    <span className="text-sm text-muted-foreground"></span>
                   </div>
-                  <Progress
-                    value={
-                      analysisResult.mentalHealthIndicators.cognitiveClarity
-                    }
-                  />
+                  <Label>
+                    {analysisResult.mentalHealthIndicators.cognitiveClarity}
+                  </Label>
                 </div>
               </div>
             </CardContent>
